@@ -1,0 +1,27 @@
+{
+  "name": "web3-gasless-validation",
+  "version": "1.0.0",
+  "description": "A repository to test a \"web3\" validation with React + Node + DB and write into smart contract with a relayer",
+  "main": "index.js",
+  "scripts": {
+    "server": "nodemon backend/app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ivanmmurciaua/web3-gasless-validation.git"
+  },
+  "author": "ivanmmurciaua",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ivanmmurciaua/web3-gasless-validation/issues"
+  },
+  "homepage": "https://github.com/ivanmmurciaua/web3-gasless-validation#readme",
+  "dependencies": {
+    "@prisma/client": "^4.4.0",
+    "cors": "^2.8.5",
+    "express": "^4.18.1",
+    "nodemon": "^2.0.20",
+    "prisma": "^4.4.0"
+  }
+}
