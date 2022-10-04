@@ -1,0 +1,12 @@
+{
+  "name": "web3-jwt-tx-smart-contracts",
+  "scripts": {
+    "node": "npx hardhat node",
+    "deploy": "npx hardhat run ./scripts/deploy.js --network localhost",
+    "test": "npx hardhat test"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^2.0.0",
+    "hardhat": "^2.11.2"
+  }
+}

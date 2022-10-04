@@ -1,1 +1,33 @@
+# REST Client
+
 GET http://localhost:3001/health
+
+###
+
+POST http://localhost:3001/addUser
+Content-Type: application/json
+
+{
+    "address" : "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC",
+    "signToken" : "90sd8f90ads809fa8s90d8f90a89s0d8f90a89s0df980a90ds9f80a8s90d890f890asd890af980s890df890asd890f9a0s6"
+}
+
+###
+
+POST http://localhost:3001/incrementPoints
+Content-Type: application/json
+Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhZGRyZXNzIjoiMHgzQzQ0Q2REZEI2YTkwMGZhMmI1ODVkZDI5OWUwM2QxMkZBNDI5M0JDIiwiaWF0IjoxNjY0ODg3NDQwLCJleHAiOjE2OTY0NDUwNDB9.c6GJrsZoYaFML1f2mimYG383wzPjkKbTfGmQNNLAodk
+
+{
+    "address" : "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC"
+}
+
+###
+
+POST http://localhost:3001/renewUser
+Content-Type: application/json
+
+{
+    "address" : "0x5",
+    "signToken" : "90sd8f90ads809fa8s90d8f90a89s0d8f90a89s0df980a90ds9f80a8s90d890f890asd890af980s890df890asd890f9a0ss"
+}
