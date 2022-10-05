@@ -1,25 +1,24 @@
 # REST Client
 
-GET http://localhost:3001/health
-
 ###
+# POST http://localhost:3001/addUser
+# Content-Type: application/json
 
-POST http://localhost:3001/addUser
-Content-Type: application/json
+# {
+#     "address" : "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC",
+#     "signToken" : "90sd8f90ads809fa8s90d8f90a89s0d8f90a89s0df980a90ds9f80a8s90d890f890asd890af980s890df890asd890f9a0s6"
+# }
 
-{
-    "address" : "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC",
-    "signToken" : "90sd8f90ads809fa8s90d8f90a89s0d8f90a89s0df980a90ds9f80a8s90d890f890asd890af980s890df890asd890f9a0s6"
-}
+GET http://localhost:3001/health
 
 ###
 
 POST http://localhost:3001/incrementPoints
 Content-Type: application/json
-Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhZGRyZXNzIjoiMHgyMjEwY2QyZmE1YzRkM2JkZDY5MTZmOWNkZjk3ODc5ODZiMTkxODkzIiwiaWF0IjoxNjY0OTEyMjE3LCJleHAiOjE2OTY0Njk4MTd9.Vql2_NCTrHlAha2QORfPaf1CdF-xH6Lcul0yIBQIXkI
+Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhZGRyZXNzIjoiMHg5OTY1NTA3ZDFhNTViY2MyNjk1YzU4YmExNmZiMzdkODE5YjBhNGRjIiwiaWF0IjoxNjY0OTY0OTQ4LCJleHAiOjE2OTY1MjI1NDh9.RcXeEMaBFmi-ojB6jrYXNESXDYxZXkSFWEuxDpLJTBQ
 
 {
-    "address" : "0x2210cD2Fa5c4D3bdD6916F9cDF9787986B191893"
+    "address" : "0x9965507D1a55bcC2695C58ba16FB37d819B0A4dc"
 }
 
 ###
@@ -32,20 +31,20 @@ Content-Type: application/json
 }
 
 ###
+# TODO
+# POST http://localhost:3001/renewUser
+# Content-Type: application/json
 
-POST http://localhost:3001/renewUser
-Content-Type: application/json
-
-{
-    "address" : "0x5",
-    "signToken" : "90sd8f90ads809fa8s90d8f90a89s0d8f90a89s0df980a90ds9f80a8s90d890f890asd890af980s890df890asd890f9a0ss"
-}
+# {
+#     "address" : "0x2210cD2Fa5c4D3bdD6916F9cDF9787986B191893",
+#     "signToken" : "90sd8f90ads809fa8s90d8f90a89s0d8f90a89s0df980a90ds9f80a8s90d890f890asd890af980s890df890asd890f9a0ss"
+# }
 
 ###
 
-GET http://localhost:3001/getToS
-Content-Type: application/json
+# POST http://localhost:3001/getToS
+# Content-Type: application/json
 
-{
-    "address" : "0x2210cD2Fa5c4D3bdD6916F9cDF9787986B191893"
-}
+# {
+#     "address" : "0x2210cD2Fa5c4D3bdD6916F9cDF9787986B191893"
+# }

@@ -10,21 +10,18 @@ app.use(express.json());
 const cors = require("cors");
 app.use(cors());
 
-// Prisma ORM Client
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
-
 // JWT Config
 const jwt = require("jsonwebtoken");
 const EXPIRES_TIME = "8766h"
 
-// Ethers import
+// ==== Ethers config ====
+
 const ethers = require("ethers");
 
 const getContractInfo = () => {
     const fs = require('fs')
     let contract_address = '';
-    let ABI = '';
+    let abi = '';
 
     try{
         const contractAddressData = fs.readFileSync('./contracts/contract-address.json', 'utf8')
@@ -37,18 +34,32 @@ const getContractInfo = () => {
 
     try{
         const contractABIData = fs.readFileSync('./contracts/contract.json', 'utf8')
-        ABI = JSON.parse(contractABIData).abi
+        abi = JSON.parse(contractABIData).abi
     }
     catch(e){
         console.error(e)
         return false
     }
 
-    return {
-        "contract_address" : contract_address,
-        "ABI" : ABI
-    }
+    return [contract_address, abi]
 }
+
+const contractAddress = getContractInfo()[0];
+const ABI = getContractInfo()[1];
+let connection;
+let contractArtifact;
+let signer;
+
+try{
+    connection = new ethers.providers.JsonRpcProvider(process.env.PROVIDER_URL);
+    contractArtifact = new ethers.Contract(contractAddress, ABI, connection);
+    signer = new ethers.Wallet(process.env.ADMIN_PRIVATE_KEY, connection);
+}
+catch(e){
+    console.error(e);
+}
+    
+// ==== ====
 
 const recoverSign = (r,s,v) => {
     const concat = r + s.slice(2) + v.toString(16);
@@ -59,51 +70,23 @@ const verifyToken = async (req, res) => {
     let authHeader = req.headers['authorization'];
     if(authHeader == null) return res.status(401).send("Token required") && false
     token = authHeader || authHeader.split(' ')[1];
+    
     try{
-        const contractInfo = getContractInfo()
-
-        if(contractInfo){
-            const contract_address = contractInfo.contract_address;
-            const ABI = contractInfo.ABI;
-
-            const connection = new ethers.providers.JsonRpcProvider(process.env.PROVIDER_URL)
-            const contractArtifact = new ethers.Contract(contract_address, ABI, connection);
-
-            const sec_sliced = await contractArtifact.getToStoken(req.body.address);
-            const sec = recoverSign(sec_sliced[0], sec_sliced[1], sec_sliced[2])
-            
-            const x = jwt.verify(token, sec, (err, user) => {
-                if(err) {
-                    req.jwt = false;
-                    console.error(err)
-                    if(err.name == "TokenExpiredError"){
-                        return res.status(401).send("Token expirado")
-                    }
-                    return res.status(401).send("Token invalido")
-                };
-                console.log(user)
-                req.jwt = user.address;
-            })
-            return true
-        }
-
-        // const address = req.body.address
-        // const query = await prisma.user.findUnique({
-        //     where : { address }
-        // })
-        // const sec = query.secure
-        // const x = jwt.verify(token, sec, (err, user) => {
-        //     if(err) {
-        //         req.jwt = false;
-        //         console.error(err)
-        //         if(err.name == "TokenExpiredError"){
-        //             return res.status(401).send("Token expirado")
-        //         }
-        //         return res.status(401).send("Token invalido")
-        //     };
-        //     req.jwt = user.address;
-        // })
-        // return true
+        const sec_sliced = await contractArtifact.getToStoken(req.body.address);
+        const sec = recoverSign(sec_sliced[0], sec_sliced[1], sec_sliced[2])
+        
+        const x = jwt.verify(token, sec, (err, user) => {
+            if(err) {
+                req.jwt = false;
+                console.error(err)
+                if(err.name == "TokenExpiredError"){
+                    return res.status(401).send("Expired token")
+                }
+                return res.status(401).send("Invalid token")
+            };
+            req.jwt = user.address;
+        })
+        return true
     }
     catch(e){
         console.error(e)
@@ -116,50 +99,31 @@ app.get("/health", (req, res) => {
     res.status(200).send("Breathing...");
 });
 
-app.post("/getPoints", async (req, res) => {
-    const contractInfo = getContractInfo()
+//TODO not necessary?
+// app.post("/renewUser", async (req, res) => {
+//     try{
+//         const address = req.body.address
+//         const TOKEN_KEY = req.body.signToken
+//         await prisma.user.update({
+//             where : {
+//                 address
+//             },
+//             data : {
+//                 secure : TOKEN_KEY
+//             }
+//         })
 
-    if(contractInfo){
-        const contract_address = contractInfo.contract_address;
-        const ABI = contractInfo.ABI;
+//         const token = jwt.sign(
+//             { address : req.body.address }, TOKEN_KEY, { expiresIn : EXPIRES_TIME }
+//         );
 
-        const connection = new ethers.providers.JsonRpcProvider(process.env.PROVIDER_URL)
-        const contractArtifact = new ethers.Contract(contract_address, ABI, connection);
-
-        let points = await contractArtifact.getPointsByUser(req.body.address);
-        points = JSON.parse(points)
-        res.status(200).json({
-            address : req.body.address,
-            points : points
-        })
-    }
-})
-
-//TODO: Control response
-app.post("/renewUser", async (req, res) => {
-    try{
-        const address = req.body.address
-        const TOKEN_KEY = req.body.signToken
-        await prisma.user.update({
-            where : {
-                address
-            },
-            data : {
-                secure : TOKEN_KEY
-            }
-        })
-
-        const token = jwt.sign(
-            { address : req.body.address }, TOKEN_KEY, { expiresIn : EXPIRES_TIME }
-        );
-
-        res.json({"token" : token})
-    }
-    catch(e){
-        console.error(e)
-        res.status(500).send("" + e)
-    }
-});
+//         res.json({"token" : token})
+//     }
+//     catch(e){
+//         console.error(e)
+//         res.status(500).send("" + e)
+//     }
+// });
 
 app.post("/saveToS", async(req, res) => {
     const address = req.body.address;
@@ -169,17 +133,7 @@ app.post("/saveToS", async(req, res) => {
 
     const TOKEN_KEY = recoverSign(r,s,v)
 
-    // Get contract info
-    const contractInfo = getContractInfo()
-
-    if(contractInfo){
-        const contract_address = contractInfo.contract_address;
-        const ABI = contractInfo.ABI;
-
-        const connection = new ethers.providers.JsonRpcProvider(process.env.PROVIDER_URL)
-        const contractArtifact = new ethers.Contract(contract_address, ABI, connection);
-        
-        var signer = new ethers.Wallet(process.env.ADMIN_PRIVATE_KEY, connection);
+    try{
         const txSigner= contractArtifact.connect(signer);
         
         const tx = await txSigner.ToSign(address, r, s, v);
@@ -192,56 +146,25 @@ app.post("/saveToS", async(req, res) => {
             res.status(200).json({"token" : token});
         }
     }
-});
-
-app.post("/addUser", async (req, res) => {
-    try{
-        const TOKEN_KEY = req.body.signToken
-        await prisma.user.create({
-            data : {
-                address : req.body.address,
-                secure  : TOKEN_KEY
-            }
-        })
-
-        const token = jwt.sign(
-            { address : req.body.address }, TOKEN_KEY, { expiresIn : EXPIRES_TIME }
-        );
-
-        res.json({"token" : token})
-    }
     catch(e){
         console.error(e)
-        res.status(500).send("" + e)
     }
-})
+
+});
 
 app.post("/incrementPoints", async (req, res) => {
-    console.log(req.jwt)
     if(await verifyToken(req, res, req.body.address)){
         if(req.jwt)
             if(req.body.address.toLowerCase() === req.jwt.toLowerCase()){
-                // Get contract info
-                const contractInfo = getContractInfo()
+                const txSigner= contractArtifact.connect(signer);
 
-                if(contractInfo){
-                    const contract_address = contractInfo.contract_address;
-                    const ABI = contractInfo.ABI;
-
-                    //TODO Error control
-                    const connection = new ethers.providers.JsonRpcProvider(process.env.PROVIDER_URL)
-                    const contractArtifact = new ethers.Contract(contract_address, ABI, connection);
-                    
-                    var signer = new ethers.Wallet(process.env.ADMIN_PRIVATE_KEY, connection);
-                    const txSigner= contractArtifact.connect(signer);
-
-                    const tx = await txSigner.incrementPoints(req.jwt)
-                    const r = await tx.wait()
-                    
-                    if(r.status){
-                        res.status(200).send("Puntos incrementados correctamente")
-                    }
+                const tx = await txSigner.incrementPoints(req.jwt)
+                const r = await tx.wait()
+                
+                if(r.status){
+                    res.status(200).send("Points incremented sucessfully")
                 }
+                
             }
             else{
                 res.status(401).send("Error validating user")
@@ -249,6 +172,70 @@ app.post("/incrementPoints", async (req, res) => {
             }
         }
 })
+
+//@sec_problem
+// app.post("/getToS", async (req, res) => {
+//     if(req.body.address !== null){
+//         try{
+//             let ToS = await contractArtifact.getToStoken(req.body.address);
+//             res.status(200).json({
+//                 address : req.body.address,
+//                 ToS : recoverSign(ToS[0], ToS[1], ToS[2])
+//             })
+//         }
+//         catch(e){
+//             console.error(e)
+//             res.status(501).send("Cannot retrieve user's points")
+//         }
+//     }
+//     else{
+//         res.status(401).send("Incorrect parameters")
+//     }
+// })
+
+app.post("/getPoints", async (req, res) => {
+    if(req.body.address !== null){
+        if(await verifyToken(req, res, req.body.address))
+            if(req.jwt)
+                try{
+                    let points = await contractArtifact.getPointsByUser(req.body.address);
+                    res.status(200).json({
+                        address : req.body.address,
+                        points : JSON.parse(points)
+                    })
+                }
+                catch(e){
+                    console.error(e)
+                    res.status(501).send("Cannot retrieve user's points")
+                }
+    }
+    else{
+        res.status(401).send("Incorrect parameters")
+    }
+})
+
+//@deprecated
+// app.post("/addUser", async (req, res) => {
+//     try{
+//         const TOKEN_KEY = req.body.signToken
+//         await prisma.user.create({
+//             data : {
+//                 address : req.body.address,
+//                 secure  : TOKEN_KEY
+//             }
+//         })
+
+//         const token = jwt.sign(
+//             { address : req.body.address }, TOKEN_KEY, { expiresIn : EXPIRES_TIME }
+//         );
+
+//         res.json({"token" : token})
+//     }
+//     catch(e){
+//         console.error(e)
+//         res.status(500).send("" + e)
+//     }
+// })
 
 app.listen(3001, () => {
     console.log("Server listening in p:3001");
